@@ -7,6 +7,8 @@ import { Environment } from '@react-three/drei'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import HeroScene from '@/components/three/HeroScene'
+import AboutSection from '@/components/AboutSection'
+import ProjectsSection from '@/components/ProjectsSection'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -87,6 +89,8 @@ export default function Home() {
           </p>
         </div>
       </div>
+      <AboutSection/>
+      <ProjectsSection/>
     </div>
   )
 }
