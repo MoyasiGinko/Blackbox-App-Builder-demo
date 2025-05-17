@@ -32,7 +32,7 @@ export default function CallToActionSection() {
     // Scene setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color("#f8fafc"); // Light background color
+    scene.background = new THREE.Color("#f8fafc");
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
