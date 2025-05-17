@@ -1,50 +1,82 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
-import { gsap } from 'gsap'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
-// This component contains the 3D elements and will be used inside the Canvas
-function ProgressBar({ progress }: { progress: number }) {
-  const barRef = useRef<THREE.Mesh>(null)
+export default function FullscreenLoading() {
+  const [progress, setProgress] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
 
-  useFrame(() => {
-    if (barRef.current) {
-      // Scale the bar width based on progress
-      barRef.current.scale.x = progress / 100
-    }
-  })
-
-  return (
-    <mesh ref={barRef} position={[-0.5, 0, 0]}>
-      <planeGeometry args={[1, 0.1]} />
-      <meshBasicMaterial color="#00ff99" />
-    </mesh>
-  )
-}
-
-export default function LoadingBar() {
-  const [progress, setProgress] = useState(0)
   useEffect(() => {
-    // Animate progress from 0 to 100 over 2 seconds
-    gsap.to({}, {
-      duration: 2,
-      onUpdate: function() {
-        setProgress(this.progress() * 100)
-      },
-      onComplete: function() {
-        setProgress(100)
-      }
-    })
-  }, [])
+    // Set minimum duration to 3 seconds
+    const startTime = Date.now();
+    const minDuration = 6000; // 3 seconds
+
+    // Simulate loading progress
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        // Calculate new progress value
+        const newProgress = Math.min(prev + Math.random() * 5, 100);
+
+        // If we're at 100%, check if minimum time has elapsed
+        if (newProgress >= 100) {
+          const elapsedTime = Date.now() - startTime;
+
+          // If we haven't reached minimum duration, stay at 99%
+          if (elapsedTime < minDuration) {
+            return 99;
+          }
+
+          // If minimum duration elapsed, clear interval and hide loader after a brief delay
+          clearInterval(interval);
+          setTimeout(() => setIsVisible(false), 200);
+          return 100;
+        }
+
+        return newProgress;
+      });
+    }, 100);
+
+    // Clean up interval
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-1 bg-gray-800 z-50">
-      <Canvas orthographic camera={{ zoom: 100, position: [0, 0, 100] }} style={{ height: '100%', width: '100%' }}>
-        <ProgressBar progress={progress} />
-      </Canvas>
-    </div>
-  )
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.5 } }}
+        >
+          {/* Loading GIF in the center */}
+          <div className="relative w-32 h-32 md:w-[500px] md:h-[500px] mb-8">
+            {/* Replace with your actual loading GIF */}
+            <Image
+              src="/loading/load18.gif"
+              alt="Loading animation"
+              layout="fill"
+              objectFit="contain"
+            />
+          </div>
+
+          {/* Progress bar at bottom left */}
+          <div className="absolute bottom-8 left-8 w-64">
+            <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-emerald-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ ease: "easeInOut" }}
+              />
+            </div>
+            <div className="mt-2 text-emerald-400 text-sm font-medium">
+              {Math.floor(progress)}%
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }
