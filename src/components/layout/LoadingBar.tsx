@@ -1,26 +1,45 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 export default function FullscreenLoading() {
   const [progress, setProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  // Properly type the refs to fix TypeScript errors
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const safetyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const forceCompleteTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     // Set minimum duration to 6 seconds
     const startTime = Date.now();
-    const minDuration = 6000;
+    const minDuration = 6000; // 6 seconds
+    const maxDuration = 20000; // 20 seconds - safety timeout
 
-    // Prevent scrolling when loading screen is visible
+    // Track scroll position and prevent scrolling
+    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
     document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollPosition}px`;
+    document.body.style.width = "100%";
 
-    // Simulate loading progress
-    const interval = setInterval(() => {
+    // Smooth progress increments (less jumpy)
+    intervalRef.current = setInterval(() => {
       setProgress((prev) => {
-        // Calculate new progress value
-        const newProgress = Math.min(prev + Math.random() * 5, 100);
+        // More predictable and smooth progress increments
+        let increment = 1;
+        if (prev < 30) increment = 2;
+        else if (prev < 60) increment = 1.5;
+        else if (prev < 80) increment = 0.8;
+        else increment = 0.5;
+
+        // Add slight randomness but keep it small
+        increment += Math.random() * 0.5;
+
+        const newProgress = Math.min(prev + increment, 100);
 
         // If we're at 100%, check if minimum time has elapsed
         if (newProgress >= 100) {
@@ -32,8 +51,11 @@ export default function FullscreenLoading() {
           }
 
           // If minimum duration elapsed, clear interval and hide loader after a brief delay
-          clearInterval(interval);
-          setTimeout(() => setIsVisible(false), 200);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = undefined;
+          }
+          timeoutRef.current = setTimeout(() => setIsVisible(false), 200);
           return 100;
         }
 
@@ -41,19 +63,81 @@ export default function FullscreenLoading() {
       });
     }, 100);
 
-    // Clean up function - restore scrolling and clear interval when component unmounts
+    // Safety timeout - force complete after maxDuration
+    safetyTimeoutRef.current = setTimeout(() => {
+      setProgress(100);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+      timeoutRef.current = setTimeout(() => setIsVisible(false), 200);
+    }, maxDuration);
+
+    // Clean up function
     return () => {
-      clearInterval(interval);
-      document.body.style.overflow = ""; // Restore default overflow behavior
+      // Clear all timers
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
+      }
+      if (safetyTimeoutRef.current) {
+        clearTimeout(safetyTimeoutRef.current);
+        safetyTimeoutRef.current = undefined;
+      }
+      if (forceCompleteTimeoutRef.current) {
+        clearTimeout(forceCompleteTimeoutRef.current);
+        forceCompleteTimeoutRef.current = undefined;
+      }
+
+      // Restore scrolling when component unmounts
+      const scrollY = parseInt(document.body.style.top || "0", 10) * -1;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
     };
   }, []);
 
   // Also restore scrolling when loading screen becomes invisible
   useEffect(() => {
     if (!isVisible) {
+      // Restore scrolling and position
+      const scrollY = parseInt(document.body.style.top || "0", 10) * -1;
+      document.body.style.position = "";
+      document.body.style.top = "";
       document.body.style.overflow = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
     }
   }, [isVisible]);
+
+  // Error handling for possible loading timeouts
+  useEffect(() => {
+    forceCompleteTimeoutRef.current = setTimeout(() => {
+      // If we're still under 95% after 15 seconds, force completion
+      if (progress < 95 && isVisible) {
+        console.warn("Loading took too long, forcing completion");
+        setProgress(100);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = undefined;
+        }
+        timeoutRef.current = setTimeout(() => setIsVisible(false), 200);
+      }
+    }, 15000);
+
+    return () => {
+      if (forceCompleteTimeoutRef.current) {
+        clearTimeout(forceCompleteTimeoutRef.current);
+        forceCompleteTimeoutRef.current = undefined;
+      }
+    };
+  }, [progress, isVisible]);
 
   return (
     <AnimatePresence>
@@ -63,14 +147,14 @@ export default function FullscreenLoading() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.5 } }}
         >
-          {/* Loading GIF in the center */}
+          {/* Loading GIF in the center with error handling */}
           <div className="relative w-80 h-80 md:w-[500px] md:h-[500px] mb-8">
-            {/* Replace with your actual loading GIF */}
             <Image
               src="/loading/load18.gif"
               alt="Loading animation"
-              layout="fill"
-              objectFit="contain"
+              fill
+              style={{ objectFit: "contain" }}
+              priority
             />
           </div>
 
