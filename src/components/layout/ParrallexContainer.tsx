@@ -7,16 +7,18 @@ import ContactSection from "./ContactSection";
 import Footer from "./Footer";
 
 export default function SmoothScrollContainer() {
-  // Create refs for the main sections
-  const containerRef = useRef(null);
+  // Create refs for the main sections with proper typing
+  const containerRef = useRef<HTMLDivElement>(null);
   const ctaSectionRef = useRef<HTMLDivElement>(null);
-  const contactFooterRef = useRef(null);
+  const contactFooterRef = useRef<HTMLDivElement>(null);
 
   // Use Framer Motion's scroll hooks for smooth animation
   const { scrollY } = useScroll();
 
   // State to store the offset where the sliding should begin
-  const [slideStartOffset, setSlideStartOffset] = useState(0);
+  const [slideStartOffset, setSlideStartOffset] = useState<number>(0);
+  // State to track if component is mounted and ready
+  const [isReady, setIsReady] = useState<boolean>(false);
 
   // Calculate where the slide should start (after CTA section)
   useEffect(() => {
@@ -24,53 +26,67 @@ export default function SmoothScrollContainer() {
       if (!ctaSectionRef.current) return;
 
       // The slide starts when the CTA section bottom would reach viewport bottom
-      // We need to calculate this absolute scroll position
       const ctaHeight = ctaSectionRef.current.offsetHeight;
 
       // Set the absolute scroll position where sliding should begin
       setSlideStartOffset(ctaHeight);
+
+      // Mark component as ready once we have valid measurements
+      if (!isReady) setIsReady(true);
     };
 
     // Initial calculation
     updateSlideStartPosition();
 
-    // Recalculate on resize
-    window.addEventListener("resize", updateSlideStartPosition);
+    // Set up a MutationObserver to detect content changes that affect height
+    if (ctaSectionRef.current) {
+      const observer = new MutationObserver(updateSlideStartPosition);
+      observer.observe(ctaSectionRef.current, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        characterData: true,
+      });
 
+      // Clean up the observer on unmount
+      return () => observer.disconnect();
+    }
+
+    // Recalculate on resize for responsive behavior
+    window.addEventListener("resize", updateSlideStartPosition);
     return () => {
       window.removeEventListener("resize", updateSlideStartPosition);
     };
-  }, []);
+  }, [isReady]);
 
-  // Calculate the sliding progress based on scroll position
-  // Use a much larger scroll range for slower animation (4x viewport height)
+  // Calculate the sliding progress based on scroll position with error handling
   const slideRangeMultiplier = 3; // Higher = slower/more gradual slide
 
   // Transform scroll position to slide progress value (0 to 1)
-  const slideProgress = useTransform(
-    scrollY,
-    // Input range: from slideStartOffset to slideStartOffset + (viewportHeight * multiplier)
-    (value) => {
-      if (!containerRef.current || slideStartOffset === 0) return 0;
+  const slideProgress = useTransform(scrollY, (value) => {
+    // Safety checks to prevent NaN or calculations with invalid values
+    if (!isReady || !containerRef.current || slideStartOffset <= 0) return 0;
 
-      const viewportHeight = window.innerHeight;
-      const totalSlideDistance = viewportHeight * slideRangeMultiplier;
+    const viewportHeight = window.innerHeight;
+    // Ensure we have a minimum slide distance to prevent division by zero
+    const totalSlideDistance = Math.max(
+      viewportHeight * slideRangeMultiplier,
+      100
+    );
 
-      // No movement until we reach the start offset
-      if (value < slideStartOffset) return 0;
+    // No movement until we reach the start offset
+    if (value < slideStartOffset) return 0;
 
-      // Calculate progress from 0 to 1 over the extended slide distance
-      const progress = Math.min(
-        (value - slideStartOffset) / totalSlideDistance,
-        1
-      );
+    // Calculate progress from 0 to 1 over the extended slide distance
+    const progress = Math.min(
+      (value - slideStartOffset) / totalSlideDistance,
+      1
+    );
 
-      return progress;
-    }
-  );
+    return progress;
+  });
 
   // Use spring physics for extra smooth animation
-  // These settings make it extremely smooth
   const smoothSlideProgress = useSpring(slideProgress, {
     stiffness: 40, // Lower = smoother (default is 100)
     damping: 20, // Higher = more damping (default is 10)
@@ -92,18 +108,31 @@ export default function SmoothScrollContainer() {
       </div>
 
       {/* Contact+Footer Section with Framer Motion for smooth sliding */}
-      <motion.div
-        ref={contactFooterRef}
-        style={{
-          y: contactY,
-        }}
-        className="relative z-20"
-      >
-        <div className="bg-transparent">
-          <ContactSection />
+      {isReady && (
+        <motion.div
+          ref={contactFooterRef}
+          style={{
+            y: contactY,
+          }}
+          className="relative z-20"
+          aria-hidden={!isReady} // Accessibility improvement
+        >
+          <div className="bg-transparent">
+            <ContactSection />
+          </div>
+          <Footer />
+        </motion.div>
+      )}
+
+      {/* Fallback while measuring - prevents flash of unstyled content */}
+      {!isReady && (
+        <div className="invisible">
+          <div className="bg-transparent">
+            <ContactSection />
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </motion.div>
+      )}
     </div>
   );
 }
