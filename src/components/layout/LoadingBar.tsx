@@ -51,7 +51,7 @@ export default function FullscreenLoading() {
           exit={{ opacity: 0, transition: { duration: 0.5 } }}
         >
           {/* Loading GIF in the center */}
-          <div className="relative w-32 h-32 md:w-[500px] md:h-[500px] mb-8">
+          <div className="relative w-80 h-80 md:w-[500px] md:h-[500px] mb-8">
             {/* Replace with your actual loading GIF */}
             <Image
               src="/loading/load18.gif"
