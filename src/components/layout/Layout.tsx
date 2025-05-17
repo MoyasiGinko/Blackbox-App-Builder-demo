@@ -1,34 +1,34 @@
-'use client'
+"use client";
 
-import { ReactNode, useState, useEffect, useRef } from 'react'
-import Navigation from './Navigation'
-import Footer from './Footer'
-import LoadingBar from './LoadingBar'
-import { motion, AnimatePresence } from 'framer-motion'
-import { usePathname, useRouter } from 'next/navigation'
+import { ReactNode, useState, useEffect, useRef } from "react";
+import Navigation from "./Navigation";
+import Footer from "./Footer";
+import LoadingBar from "./LoadingBar";
+import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import CallToActionSection from "./CTA";
 
 interface LayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const loadingTimeout = useRef<NodeJS.Timeout | null>(null)
+  const pathname = usePathname();
+  const [loading, setLoading] = useState(false);
+  const loadingTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Simulate loading state on route change
   useEffect(() => {
-    setLoading(true)
-    if (loadingTimeout.current) clearTimeout(loadingTimeout.current)
+    setLoading(true);
+    if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
     loadingTimeout.current = setTimeout(() => {
-      setLoading(false)
-    }, 1500) // simulate 1.5s loading time
+      setLoading(false);
+    }, 1500); // simulate 1.5s loading time
 
     return () => {
-      if (loadingTimeout.current) clearTimeout(loadingTimeout.current)
-    }
-  }, [pathname])
+      if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
+    };
+  }, [pathname]);
 
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col">
@@ -45,8 +45,9 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </motion.main>
       </AnimatePresence>
+      <CallToActionSection />
       <Footer />
       {loading && <LoadingBar />}
     </div>
-  )
+  );
 }
