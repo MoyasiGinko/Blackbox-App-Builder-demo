@@ -13,7 +13,12 @@ export default function Footer() {
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const isNavigating = useRef(false);
-  const navigationTriggered = useRef(false);
+
+  // Add cooldown state instead of navigationTriggered ref
+  const [isCooldown, setIsCooldown] = useState(false);
+
+  // Add a state to track the countdown seconds
+  const [cooldownSeconds, setCooldownSeconds] = useState(5);
 
   // Track progress and timing
   const lastScrollTime = useRef(Date.now());
@@ -21,28 +26,34 @@ export default function Footer() {
   const decreaseRate = 0.15; // How much progress decreases per second when not scrolling
   const increaseAmount = 0.05; // How much progress increases per scroll event
 
-  // Reset progress bar when navigation has been triggered and completed
+  // Set up cooldown timer effect
   useEffect(() => {
-    // Check if navigation was triggered and reset the state
-    if (navigationTriggered.current) {
-      // Reset the flag
-      navigationTriggered.current = false;
+    let intervalId: NodeJS.Timeout | null = null;
 
-      // Reset progress
-      setProgress(0);
-      isNavigating.current = false;
+    // If we're in cooldown, start the countdown
+    if (isCooldown) {
+      setCooldownSeconds(5); // Reset to 5 seconds when cooldown starts
 
-      // Reset progress bar appearance
-      if (progressBarRef.current) {
-        gsap.set(progressBarRef.current, {
-          width: "0%",
-          backgroundColor: "#3B82F6", // Blue color
+      intervalId = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
         });
-      }
-
-      console.log("Progress bar reset after navigation triggered");
+      }, 1000);
+    } else {
+      // Reset the countdown when not in cooldown
+      setCooldownSeconds(5);
     }
-  }, [navigationTriggered.current]);
+
+    // Clean up interval when cooldown ends or component unmounts
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isCooldown]);
 
   useEffect(() => {
     if (!footerRef.current || !progressBarRef.current) return;
@@ -60,10 +71,12 @@ export default function Footer() {
         const timeSinceLastScroll = currentTime - lastScrollTime.current;
 
         // If it's been more than 300ms since last scroll, start decreasing
+        // But only if we're not in cooldown and not navigating
         if (
           timeSinceLastScroll > 300 &&
           progress > 0 &&
-          !isNavigating.current
+          !isNavigating.current &&
+          !isCooldown
         ) {
           // Calculate how much to decrease (based on time since last update)
           const decreaseAmount = decreaseRate * (timeSinceLastScroll / 1000);
@@ -101,7 +114,8 @@ export default function Footer() {
         document.body.offsetHeight - 10; // 10px tolerance
 
       // Only process wheel events when at the bottom and scrolling down
-      if (isAtBottom && e.deltaY > 0 && !isNavigating.current) {
+      // Also check if we're in cooldown
+      if (isAtBottom && e.deltaY > 0 && !isNavigating.current && !isCooldown) {
         e.preventDefault(); // Prevent actual scroll
 
         // Update last scroll time
@@ -128,8 +142,9 @@ export default function Footer() {
         });
 
         // Check if we've reached the threshold to navigate
-        if (newProgress >= 1 && !isNavigating.current) {
+        if (newProgress >= 1 && !isNavigating.current && !isCooldown) {
           isNavigating.current = true;
+          setIsCooldown(true); // This will trigger the countdown effect
 
           // Clear the decrease interval
           if (decreaseInterval.current) {
@@ -143,24 +158,28 @@ export default function Footer() {
           const nextIndex = (currentIndex + 1) % pageOrder.length;
           const nextPath = pageOrder[nextIndex];
 
-          // Show completed progress bar briefly before navigating
+          // Navigate after seeing completed progress for a brief delay
           setTimeout(() => {
-            // Flag that navigation has been triggered to reset on next render
-            navigationTriggered.current = true;
-
-            // Navigate to next page
             router.push(nextPath);
+          }, 400);
 
-            // Reset progress bar immediately so it doesn't flash during navigation
-            setTimeout(() => {
-              if (progressBarRef.current) {
-                gsap.set(progressBarRef.current, {
-                  width: "0%",
-                  backgroundColor: "#3B82F6",
-                });
-              }
-            }, 50);
-          }, 400); // Brief delay to see completed state
+          // Set up 5-second cooldown - after this time, reset everything
+          setTimeout(() => {
+            setProgress(0);
+            isNavigating.current = false;
+            setIsCooldown(false); // This will clear the countdown effect
+
+            // Reset progress bar appearance
+            if (progressBarRef.current) {
+              gsap.set(progressBarRef.current, {
+                width: "0%",
+                backgroundColor: "#3B82F6", // Blue color
+              });
+            }
+
+            // Restart the decrease interval
+            startDecreaseInterval();
+          }, 5000); // 5-second cooldown
         }
       }
     };
@@ -175,13 +194,13 @@ export default function Footer() {
         clearInterval(decreaseInterval.current);
       }
     };
-  }, [progress, router]);
+  }, [progress, router, isCooldown]); // Added isCooldown to dependencies
 
   // Reset on component mount
   useEffect(() => {
     setProgress(0);
     isNavigating.current = false;
-    navigationTriggered.current = false;
+    setIsCooldown(false);
 
     if (progressBarRef.current) {
       gsap.set(progressBarRef.current, {
@@ -194,7 +213,7 @@ export default function Footer() {
   return (
     <motion.footer
       ref={footerRef}
-      className="w-full min-h-[20vh] bg-gray-900 text-white py-12 flex flex-col items-center justify-center relative"
+      className="w-full min-h-[20vh] bg-black text-white py-12 flex flex-col items-center justify-center relative"
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -218,7 +237,9 @@ export default function Footer() {
 
       <div className="max-w-7xl w-full px-6 flex justify-between items-center">
         <div className="text-sm uppercase tracking-widest">
-          {progress < 0.9
+          {isCooldown
+            ? `Cooldown: ${cooldownSeconds}s...`
+            : progress < 0.9
             ? "Keep Scrolling to Continue"
             : "Navigating to Next Page..."}
         </div>
@@ -244,7 +265,9 @@ export default function Footer() {
 
       {/* Progress indicator text */}
       <div className="mt-6 text-gray-400 font-semibold">
-        Progress: {Math.round(progress * 100)}%
+        {isCooldown
+          ? `Cooldown: ${cooldownSeconds}s`
+          : `Progress: ${Math.round(progress * 100)}%`}
       </div>
     </motion.footer>
   );
