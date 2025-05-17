@@ -99,7 +99,7 @@ export default function SmoothScrollContainer() {
         }}
         className="relative z-20"
       >
-        <div className="bg-white">
+        <div className="bg-transparent">
           <ContactSection />
         </div>
         <Footer />

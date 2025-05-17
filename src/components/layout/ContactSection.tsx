@@ -25,7 +25,7 @@ export default function ContactSection() {
   };
 
   return (
-    <div className="h-auto w-full bg-white px-6 lg:px-12 py-24 flex items-center">
+    <div className="h-auto w-full bg-slate-500 rounded-t-2xl px-6 lg:px-12 py-24 flex items-center">
       <div className="max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-6">
           {/* Contact Information Column */}
@@ -95,7 +95,7 @@ export default function ContactSection() {
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full bg-gray-100 rounded-md p-4 pr-12 focus:outline-none transition-all duration-300 ${
+                className={`w-full bg-gray-900 rounded-md p-4 pr-12 focus:outline-none transition-all duration-300 ${
                   submitted ? "bg-green-50 text-green-600" : ""
                 }`}
                 required
