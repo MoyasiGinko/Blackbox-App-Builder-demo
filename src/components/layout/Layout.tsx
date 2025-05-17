@@ -2,11 +2,11 @@
 
 import { ReactNode, useState, useEffect, useRef } from "react";
 import Navigation from "./Navigation";
-import Footer from "./Footer";
+// import Footer from "./Footer";
 import LoadingBar from "./LoadingBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import CallToActionSection from "./CTA";
+import ParallaxContainer from "./ParrallexContainer";
 
 interface LayoutProps {
   children: ReactNode;
@@ -45,8 +45,9 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </motion.main>
       </AnimatePresence>
-      <CallToActionSection />
-      <Footer />
+      <ParallaxContainer />
+      {/* <Footer /> */}
+
       {loading && <LoadingBar />}
     </div>
   );

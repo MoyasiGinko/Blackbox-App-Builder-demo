@@ -13,6 +13,7 @@ export default function Footer() {
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const isNavigating = useRef(false);
+  const navigationTriggered = useRef(false);
 
   // Track progress and timing
   const lastScrollTime = useRef(Date.now());
@@ -20,20 +21,28 @@ export default function Footer() {
   const decreaseRate = 0.15; // How much progress decreases per second when not scrolling
   const increaseAmount = 0.05; // How much progress increases per scroll event
 
-  // Reset all state when component mounts (after navigation)
+  // Reset progress bar when navigation has been triggered and completed
   useEffect(() => {
-    setProgress(0);
-    isNavigating.current = false;
-    lastScrollTime.current = Date.now();
+    // Check if navigation was triggered and reset the state
+    if (navigationTriggered.current) {
+      // Reset the flag
+      navigationTriggered.current = false;
 
-    // Reset progress bar width to 0%
-    if (progressBarRef.current) {
-      gsap.set(progressBarRef.current, {
-        width: "0%",
-        backgroundColor: "#3B82F6", // Reset to initial blue color
-      });
+      // Reset progress
+      setProgress(0);
+      isNavigating.current = false;
+
+      // Reset progress bar appearance
+      if (progressBarRef.current) {
+        gsap.set(progressBarRef.current, {
+          width: "0%",
+          backgroundColor: "#3B82F6", // Blue color
+        });
+      }
+
+      console.log("Progress bar reset after navigation triggered");
     }
-  }, []);
+  }, [navigationTriggered.current]);
 
   useEffect(() => {
     if (!footerRef.current || !progressBarRef.current) return;
@@ -134,8 +143,24 @@ export default function Footer() {
           const nextIndex = (currentIndex + 1) % pageOrder.length;
           const nextPath = pageOrder[nextIndex];
 
-          // Just navigate without fading out
-          router.push(nextPath);
+          // Show completed progress bar briefly before navigating
+          setTimeout(() => {
+            // Flag that navigation has been triggered to reset on next render
+            navigationTriggered.current = true;
+
+            // Navigate to next page
+            router.push(nextPath);
+
+            // Reset progress bar immediately so it doesn't flash during navigation
+            setTimeout(() => {
+              if (progressBarRef.current) {
+                gsap.set(progressBarRef.current, {
+                  width: "0%",
+                  backgroundColor: "#3B82F6",
+                });
+              }
+            }, 50);
+          }, 400); // Brief delay to see completed state
         }
       }
     };
@@ -151,6 +176,20 @@ export default function Footer() {
       }
     };
   }, [progress, router]);
+
+  // Reset on component mount
+  useEffect(() => {
+    setProgress(0);
+    isNavigating.current = false;
+    navigationTriggered.current = false;
+
+    if (progressBarRef.current) {
+      gsap.set(progressBarRef.current, {
+        width: "0%",
+        backgroundColor: "#3B82F6",
+      });
+    }
+  }, []);
 
   return (
     <motion.footer

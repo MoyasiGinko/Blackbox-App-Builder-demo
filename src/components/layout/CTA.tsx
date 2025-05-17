@@ -258,7 +258,7 @@ export default function CallToActionSection() {
   return (
     <div
       ref={containerRef}
-      className="relative h-screen w-full overflow-hidden bg-black"
+      className="relative h-full w-full overflow-hidden bg-white"
     >
       {/* WebGL Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0" />
