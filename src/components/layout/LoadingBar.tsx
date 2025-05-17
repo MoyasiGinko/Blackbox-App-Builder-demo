@@ -9,9 +9,12 @@ export default function FullscreenLoading() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Set minimum duration to 3 seconds
+    // Set minimum duration to 6 seconds
     const startTime = Date.now();
-    const minDuration = 6000; // 3 seconds
+    const minDuration = 6000;
+
+    // Prevent scrolling when loading screen is visible
+    document.body.style.overflow = "hidden";
 
     // Simulate loading progress
     const interval = setInterval(() => {
@@ -38,9 +41,19 @@ export default function FullscreenLoading() {
       });
     }, 100);
 
-    // Clean up interval
-    return () => clearInterval(interval);
+    // Clean up function - restore scrolling and clear interval when component unmounts
+    return () => {
+      clearInterval(interval);
+      document.body.style.overflow = ""; // Restore default overflow behavior
+    };
   }, []);
+
+  // Also restore scrolling when loading screen becomes invisible
+  useEffect(() => {
+    if (!isVisible) {
+      document.body.style.overflow = "";
+    }
+  }, [isVisible]);
 
   return (
     <AnimatePresence>
