@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
+import Image from "next/image";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -101,10 +102,12 @@ const expertiseAreas = [
 
 // WebGL Background component
 const WebGLBackground = () => {
-  const mountRef = useRef(null);
+  const mountRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
+
+    const mountNode = mountRef.current; // Copy ref value
 
     // Scene setup
     const scene = new THREE.Scene();
@@ -118,7 +121,7 @@ const WebGLBackground = () => {
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
-    mountRef.current.appendChild(renderer.domElement);
+    mountNode.appendChild(renderer.domElement);
 
     // Create particles
     const particlesGeometry = new THREE.BufferGeometry();
@@ -186,7 +189,7 @@ const WebGLBackground = () => {
     // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
-      mountRef.current?.removeChild(renderer.domElement);
+      mountNode?.removeChild(renderer.domElement);
     };
   }, []);
 
@@ -196,7 +199,15 @@ const WebGLBackground = () => {
 };
 
 // Team member card component
-const TeamMemberCard = ({ member }) => {
+type TeamMember = {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  image: string;
+};
+
+const TeamMemberCard = ({ member }: { member: TeamMember }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -206,7 +217,10 @@ const TeamMemberCard = ({ member }) => {
       className="flex flex-col md:flex-row gap-6 mb-16"
     >
       <div className="w-full md:w-1/3">
-        <img
+        <Image
+          width={400}
+          height={480}
+          priority
           src={member.image}
           alt={member.name}
           className="w-full h-64 object-cover rounded"
@@ -223,7 +237,14 @@ const TeamMemberCard = ({ member }) => {
 };
 
 // Project card component
-const ProjectCard = ({ project }) => {
+type Project = {
+  title: string;
+  client: string;
+  description: string;
+  thumbnail: string;
+};
+
+const ProjectCard = ({ project }: { project: Project }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -233,7 +254,10 @@ const ProjectCard = ({ project }) => {
       className="group cursor-pointer"
     >
       <div className="overflow-hidden rounded mb-4">
-        <img
+        <Image
+          width={600}
+          height={400}
+          priority
           src={project.thumbnail}
           alt={project.title}
           className="w-full h-64 object-cover transition-all duration-500 group-hover:scale-105"
@@ -257,11 +281,11 @@ export default function About() {
     const expertiseSections = gsap.utils.toArray(".expertise-section");
 
     expertiseSections.forEach((section) => {
-      gsap.from(section, {
+      gsap.from(section as Element, {
         opacity: 0,
         y: 50,
         scrollTrigger: {
-          trigger: section,
+          trigger: section as Element,
           start: "top center+=100",
           end: "bottom center",
           scrub: 1,
@@ -348,7 +372,7 @@ export default function About() {
                   Our Vision
                 </h3>
                 <p className="text-base md:text-lg opacity-80">
-                  We believe in pushing the boundaries of what's possible in
+                  We believe in pushing the boundaries of what&#39;s possible in
                   digital experiences. By combining cutting-edge technology with
                   human-centered design, we create work that engages, inspires,
                   and delivers measurable results.
@@ -385,7 +409,7 @@ export default function About() {
               Our Expertise
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
-              {expertiseAreas.map((area, index) => (
+              {expertiseAreas.map((area) => (
                 <div key={area.title} className="expertise-section">
                   <h3 className="text-xl md:text-2xl font-bold mb-8">
                     {area.title}
