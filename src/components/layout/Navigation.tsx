@@ -52,7 +52,7 @@ export default function Navigation() {
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="px-6 py-2.5 bg-white text-black rounded-full text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
+              className="px-6 py-2.5 bg-white text-black rounded-full cursor-pointer text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
             >
               {isOpen ? "CLOSE" : "MENU"} <span>{isOpen ? "•" : "••"}</span>
             </button>
