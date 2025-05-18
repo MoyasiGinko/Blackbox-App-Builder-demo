@@ -146,6 +146,7 @@ export default function Navigation() {
                     >
                       <Link
                         href="/labs"
+                        onClick={() => setIsOpen(false)}
                         className="group flex items-center justify-between hover:opacity-50 transition-opacity"
                       >
                         <div className="flex items-center gap-3">
