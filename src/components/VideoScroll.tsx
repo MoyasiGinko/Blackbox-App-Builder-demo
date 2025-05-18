@@ -7,6 +7,23 @@ const ImmersiveVideoScroll = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile on initial load and when window resizes
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Check on mount
+    checkMobile();
+
+    // Add resize listener
+    window.addEventListener("resize", checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Video scroll logic (commented out for now)
   /*
@@ -70,11 +87,12 @@ const ImmersiveVideoScroll = () => {
   */
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative w-full overflow-hidden">
       {/* Header Section - closely matching the image */}
-      <div className="bg-trnasparent max-w-7xl mx-auto pt-20 pb-40">
-        <div className="container mx-auto px-8">
-          <h1 className="text-7xl font-bold leading-none tracking-tight mb-16">
+      <div className="bg-transparent w-full max-w-7xl mx-auto pt-12 md:pt-20 pb-20 md:pb-40">
+        <div className="container mx-auto px-4 md:px-8">
+          {/* Responsive heading */}
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight md:leading-none tracking-tight mb-10 md:mb-16">
             Connecting Ideals to
             <br />
             Uniquely Crafted
@@ -82,18 +100,12 @@ const ImmersiveVideoScroll = () => {
             Experiences
           </h1>
 
-          {/* Decorative teal curved lines in background */}
-          <div className="relative">
-            <div className="w-full h-2 bg-teal-300 rounded-full absolute -right-20 top-24 -z-10 transform rotate-3"></div>
-            <div className="w-full h-2 bg-teal-300 rounded-full absolute -right-32 top-48 -z-10 transform -rotate-2"></div>
-            <div className="w-full h-2 bg-teal-300 rounded-full absolute -right-16 top-72 -z-10 transform rotate-1"></div>
-          </div>
-
-          <div className="flex justify-between items-center mt-32">
-            {/* Video container (left side) */}
+          {/* Responsive flex container that switches to column on mobile */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mt-16 md:mt-32 gap-8 md:gap-0">
+            {/* Video container (full width on mobile, half on desktop) */}
             <div
               ref={sectionRef}
-              className="w-1/2 bg-blue-300 h-80 relative z-10 overflow-hidden rounded-xl shadow-xl"
+              className="w-full md:w-1/2 bg-blue-300 h-60 md:h-80 relative z-10 overflow-hidden rounded-xl shadow-xl"
             >
               <video
                 ref={videoRef}
@@ -106,13 +118,13 @@ const ImmersiveVideoScroll = () => {
               </video>
             </div>
 
-            {/* Text content (right side) */}
-            <div className="w-1/2 pl-16">
-              <p className="text-2xl font-light">
+            {/* Text content (full width on mobile, half on desktop) */}
+            <div className="w-full md:w-1/2 md:pl-16 mt-6 md:mt-0">
+              <p className="text-xl md:text-2xl font-light">
                 At Lusion, we don't follow trends for the
-                <br />
+                <br className="hidden md:block" />
                 sake of it. We believe in a different
-                <br />
+                <br className="hidden md:block" />
                 approach - one that's centered around
               </p>
             </div>
@@ -130,17 +142,17 @@ const ImmersiveVideoScroll = () => {
           isFullscreen ? "opacity-0" : "opacity-100"
         }`}
       >
-        <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold mb-8">Continue Exploring</h2>
-          <p className="text-xl">
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 md:mb-8">Continue Exploring</h2>
+          <p className="text-lg md:text-xl">
             Our unique approach combines cutting-edge technology with artistic
             vision to create memorable digital experiences.
           </p>
 
-          <div className="grid grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-8 md:mt-12">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-100 p-6 rounded-lg">
-                <h3 className="text-2xl font-bold mb-4">Feature {i}</h3>
+              <div key={i} className="bg-gray-100 p-4 md:p-6 rounded-lg">
+                <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Feature {i}</h3>
                 <p>
                   Discover how our innovative solutions can transform your
                   digital presence.

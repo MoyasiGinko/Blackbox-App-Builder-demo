@@ -45,7 +45,7 @@ export default function Navigation() {
         <div className="flex items-center gap-3">
           <Link
             href="/contact"
-            className="px-6 py-2.5 bg-[#2A2A2A] text-white rounded-full text-sm hover:bg-black transition-colors"
+            className="px-6 py-2.5 hidden md:block bg-[#2A2A2A] text-white rounded-full text-sm hover:bg-black transition-colors"
           >
             LET&#39;S TALK •
           </Link>
