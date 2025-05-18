@@ -12,6 +12,7 @@ import ProjectsSection from "@/components/ProjectsSection";
 // import TestimonialsSection from "@/components/TestimonialsSection";
 // import ContactSection from "@/components/ContactSection";
 import Link from "next/link";
+import ImmersiveVideoScroll from "@/components/VideoScroll";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,9 +76,9 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="hero-text text-4xl md:text-6xl lg:text-8xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#6e44ff] via-[#ff44aa] to-[#44ffdd]"
+            className="hero-text text-4xl md:text-6xl lg:text-8xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-50 via-blue-50 to-blue-100"
           >
-            Beyond Visions
+            Aniverse Studio
           </motion.h1>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -85,7 +86,7 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="hero-text text-2xl md:text-4xl lg:text-6xl font-light mb-12"
           >
-            Within Reach
+            A New Era of Digital Experiences
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -158,7 +159,7 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center px-4 py-24 bg-gradient-to-b from-black to-[#0a0a0a]"
       >
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="intro-text text-3xl md:text-4xl lg:text-6xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-[#6e44ff] to-[#ff44aa]">
+          <h2 className="intro-text text-3xl md:text-4xl lg:text-6xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-gray-50 to-blue-100">
             Connecting Ideals to Uniquely Crafted Experiences
           </h2>
           <p className="intro-text text-base md:text-lg lg:text-xl opacity-80 mb-16">
@@ -234,6 +235,7 @@ export default function Home() {
       {/* About, Projects, Testimonials and Contact Sections */}
       <AboutSection />
       <ProjectsSection />
+      <ImmersiveVideoScroll />
     </div>
   );
 }

@@ -55,7 +55,7 @@ export default function ProjectsSection() {
     <motion.div
       ref={sectionRef}
       style={{ opacity, y }}
-      className="py-24 px-4 bg-[#0a0a0a]"
+      className="py-24 px-4 bg-transparent"
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-16 gap-6">
